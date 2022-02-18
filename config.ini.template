@@ -1,0 +1,16 @@
+[database]
+name=database_name
+server=database_server
+user=database_user
+password=database_password
+
+[smtp]
+server=smtp_server
+user=smtp_user
+password=smtp_password
+ehlo=smtp_ehlo
+
+[email]
+all=email_all
+from=email_from
+subject="email_subject"
