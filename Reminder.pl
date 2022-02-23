@@ -176,9 +176,8 @@ sub main {
     $dbh->{AutoCommit} = 0;
 
     my $create_statement = qq{CREATE TABLE IF NOT EXISTS tmaxsoft_redmine_reminders(
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            issue_id INT NOT NULL UNIQUE,
-            count INT DEFAULT 1)
+            issue_id INT PRIMARY KEY,
+            reminder_count INT DEFAULT 1)
     };
 
     $dbh->do($create_statement);
@@ -214,10 +213,10 @@ sub main {
         $email = $row->{'email'};
         $reminder_count = -1;
 
-        my $statement = "SELECT count FROM tmaxsoft_redmine_reminders WHERE issue_id=?";
+        my $statement = "SELECT reminder_count FROM tmaxsoft_redmine_reminders WHERE issue_id=?";
         my $reminders = $dbh->selectall_arrayref($statement, { Slice => {} }, $id);
         for my $reminder ( @$reminders ){
-            $reminder_count = $reminder->{'count'};
+            $reminder_count = $reminder->{'reminder_count'};
         }
 
         if($is_update eq 1){	
