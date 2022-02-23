@@ -11,42 +11,32 @@ use Config::Tiny;
 my $dbh;
 my $is_debug=0;
 my $is_update=0;
+my $is_send=0;
+my $is_send_all=0;
 my $config_path='';
 
 my $body_all='';
 my $body='';
 my @records = ();
 
-my $config = Config::Tiny->read( 'config.ini', 'utf8' );
-my $database_name = $config->{database}{name};    
-my $database_server = $config->{database}{server};  
-my $database_user = $config->{database}{user};    
-my $database_password = $config->{database}{password};
-my $smtp_server = $config->{smtp}{server};    
-my $smtp_user = $config->{smtp}{user};    
-my $smtp_password = $config->{smtp}{password};    
-my $smtp_ehlo = $config->{smtp}{ehlo};    
-my $email_all = $config->{email}{all};   
-my $email_from = $config->{email}{from};
-my $email_subject = $config->{email}{subject};
+my $database_name;    
+my $database_server;  
+my $database_user;    
+my $database_password;
+
+my $smtp_server;    
+my $smtp_user;    
+my $smtp_password;    
+my $smtp_ehlo;    
+
+my $email_all;   
+my $email_from;
+my $email_subject;
 #end of config
 
-my $swaks="./swaks --auth ";
-$swaks.="--server $smtp_server ";
-$swaks.="--au $smtp_user ";
-$swaks.="--ap $smtp_password ";
-$swaks.="--h-Subject: $email_subject ";
-$swaks.="--from $email_from ";
-$swaks.="--ehlo $smtp_ehlo ";
-$swaks.='--add-header "MIME-Version: 1.0" --add-header "Content-Type: text/html" ';
-
-my $header="<html><head><style>td.reminder_subject {text-align: left;}";
-$header.="table, th, td { padding: 0px 4px 0px 4px; border: solid 1px #d7d7d7; border-collapse: collapse; text-align: center; font-family: \"Verdana\",sans-serif; }";
-$header.= "th { background: #EEEEEE; color: #116699; } </style></head><body>\n";
-$header.="<h4>Redmine Reminder Rules</h4>\n";
-$header.="<ul><li>Very High: Reminded when no action detected more than 2 days.</li><li>High: Reminded when no action detected more than 4 days.</li></ul>\n";
-$header.="<h4>Redmine Reminder Details</h4>\n";
-my $footer='</body></html>';
+my $swaks='';
+my $header='';
+my $footer='';
 
 sub push_email {
     my($priority, $id, $subject, $updated_on, $reminder_count) = @_;
@@ -73,7 +63,7 @@ sub send_email {
     $command.="--body '$header\n$body\n$footer\n'";
 
     if($is_debug eq 1) { print "[DEBUG] send_email: $header\n$body\n$footer\n"; }
-    system("./swaks $command");
+    if($is_send eq 1 ) { system("./swaks $command"); }
 
     $body_all.="$body";
 
@@ -93,7 +83,7 @@ sub send_email_all {
     $command.="--body '$header\n$body_all\n$footer\n' ";
 
     if($is_debug eq 1) { print "[DEBUG] send_email_all: $header\n$body_all\n$footer\n"; }
-    system("./swaks $command");
+    if($is_send_all eq 1) { system("./swaks $command"); }
 }
 
 sub load_config {
@@ -112,7 +102,7 @@ sub load_config {
         return();
     }
 
-    $config = Config::Tiny->read( $config_path, 'utf8' );
+    my $config = Config::Tiny->read( $config_path, 'utf8' );
 
     $database_name = $config->{database}{name};    
     $database_server = $config->{database}{server};  
@@ -127,6 +117,26 @@ sub load_config {
     $email_all = $config->{email}{all};   
     $email_from = $config->{email}{from};
     $email_subject = $config->{email}{subject};
+
+    $swaks.="./swaks --auth ";
+    $swaks.="--server $smtp_server ";
+    $swaks.="--au $smtp_user ";
+    $swaks.="--ap $smtp_password ";
+    $swaks.="--h-Subject: $email_subject ";
+    $swaks.="--from $email_from ";
+    $swaks.="--ehlo $smtp_ehlo ";
+    $swaks.='--add-header "MIME-Version: 1.0" --add-header "Content-Type: text/html" ';
+
+    $header.="<html><head><style>td.reminder_subject {text-align: left;}";
+    $header.="table, th, td { padding: 0px 4px 0px 4px; border: solid 1px #d7d7d7; border-collapse: collapse; text-align: center; font-family: \"Verdana\",sans-serif; }";
+    $header.= "th { background: #EEEEEE; color: #116699; } </style></head><body>\n";
+    $header.="<h4>Redmine Reminder Rules</h4>\n";
+    $header.="<ul><li>Very High: Reminded when no action detected more than 2 days.</li><li>High: Reminded when no action detected more than 4 days.</li></ul>\n";
+    $header.="<h4>Redmine Reminder Details</h4>\n";
+
+    $footer.='</body></html>';
+
+
 }
 
 sub main {
@@ -142,17 +152,25 @@ sub main {
     GetOptions( 'config=s' => \ $config_path
         , 'update!' => \ $is_update
         , 'debug!' => \ $is_debug
+        , 'send!' => \ $is_send
+        , 'send-all!' => \ $is_send_all
     );
 
     if($is_debug eq 1){
         print "[DEBUG] config['config']: $config_path\n";
         print "[DEBUG] config['update']: $is_update\n";
         print "[DEBUG] config['debug']: $is_debug\n";
-        if($is_update eq 0)
+        print "[DEBUG] config['send']: $is_send\n";
+        print "[DEBUG] config['send-all']: $is_send_all\n";
+        if($is_debug eq 1)
         {
-            if($is_debug eq 1) { print "[DEBUG]: --update is not specified. ignoring table update.\n" };
+            if($is_update eq 0) { print "[DEBUG]: --update is not specified. ignoring table update.\n" };
+            if($is_send eq 0) { print "[DEBUG]: --send is not specified. ignoring send to users.\n" };
+            if($is_send_all eq 0) { print "[DEBUG]: --send-all is not specified. ignoring send all to users.\n" };
         }
     }
+
+    load_config();
 
     $dbh = DBI->connect("DBI:mysql:database=$database_name;host=$database_server", $database_user, $database_password, {'RaiseError' => 1});
     $dbh->{AutoCommit} = 0;
@@ -209,6 +227,7 @@ sub main {
                 my $insert_sth = $dbh->prepare("INSERT INTO tmaxsoft_redmine_reminders(issue_id) VALUES (?)");
                 $insert_sth->bind_param(1, $id);
                 $insert_sth->execute;
+                $reminder_count=1;
             }
             else 
             {
