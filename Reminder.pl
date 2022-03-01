@@ -231,8 +231,8 @@ sub main {
             else 
             {
                 $reminder_count = $reminder_count+1;
-                if($is_debug eq 1) { print "[DEBUG]: UPDATE tmaxsoft_redmine_reminders SET count=$reminder_count where issue_id=$id\n"; }
-                my $update_sth = $dbh->prepare("UPDATE tmaxsoft_redmine_reminders SET count=? where issue_id=?");
+                if($is_debug eq 1) { print "[DEBUG]: UPDATE tmaxsoft_redmine_reminders SET reminder_count=$reminder_count where issue_id=$id\n"; }
+                my $update_sth = $dbh->prepare("UPDATE tmaxsoft_redmine_reminders SET reminder_count=? where issue_id=?");
                 $update_sth->bind_param(1, $reminder_count);
                 $update_sth->bind_param(2, $id);
                 $update_sth->execute;
