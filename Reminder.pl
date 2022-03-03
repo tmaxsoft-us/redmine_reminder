@@ -189,8 +189,9 @@ sub main {
         join issues on issues.priority_id = enumerations.id
         join email_addresses on email_addresses.user_id = issues.assigned_to_id
         join projects on projects.id = issues.project_id
+        join issue_statuses on issue_statuses.id = issues.status_id
         where 
-        (issues.closed_on is NULL) and
+        (issue_statuses.is_closed=0) and
         (issues.project_id=68 or projects.parent_id=68) and
         (issues.tracker_id=3) and
         (
