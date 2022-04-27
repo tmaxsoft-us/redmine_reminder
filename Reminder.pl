@@ -130,13 +130,19 @@ sub load_config {
     $header.="<html><head><style>td.reminder_subject {text-align: left;}";
     $header.="table, th, td { padding: 0px 4px 0px 4px; border: solid 1px #d7d7d7; border-collapse: collapse; text-align: center; font-family: \"Verdana\",sans-serif; }";
     $header.= "th { background: #EEEEEE; color: #116699; } </style></head><body>\n";
-    $header.="<h4>Redmine Reminder Rules</h4>\n";
-    $header.="<ul><li>Very High: Reminded when no action detected more than 2 days.</li><li>High: Reminded when no action detected more than 4 days.</li></ul>\n";
-    $header.="<h4>Redmine Reminder Details</h4>\n";
+    $header.="<h4>Project Priorities</h4>\n";
+    $header.="<ul>";
+    $header.="<li>Lot I and Lot II BCP are the highest priority</li>";
+    $header.="<li>Lot II IDMS shakedown is second priority</li>";
+    $header.="<li>Lot III IDMS shakedown is third priority</li>"; 
+    $header.="</ul>\n";
+    $header.="<h4>Reminder Rules</h4>\n";
+    $header.="<ul>";
+    $header.="<li>Very High: Reminded when no action detected more than 2 days.</li><li>High: Reminded when no action detected more than 4 days.</li>";
+    $header.="</ul>\n";
+    $header.="<h4>Reminder Details</h4>\n";
 
     $footer.='</body></html>';
-
-
 }
 
 sub main {
