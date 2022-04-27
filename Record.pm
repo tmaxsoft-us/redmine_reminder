@@ -7,6 +7,7 @@ my $debug=0;
 sub new{
     my $class = shift;
     my $self = {
+	    _project=> shift,
 	    _priority=> shift,
 	    _id => shift,
 	    _subject => shift,
@@ -15,6 +16,7 @@ sub new{
     };
 
     if($debug eq 1){
+        print "Record: project is $self->{_project}\n";
         print "Record: priority is $self->{_priority}\n";
         print "Record: id is $self->{_id}\n";
         print "Record: subject is $self->{_subject}\n";
@@ -23,6 +25,17 @@ sub new{
     }
     bless $self, $class;
     return $self;
+}
+
+sub getProject {
+    my( $self ) = @_;
+    return $self->{_project};
+}
+
+sub setProject {
+	my( $self, $project ) = @_;
+	$self->{_project} = $project if defined($project);
+	return $self->{_project};
 }
 
 sub getPriority {
@@ -71,12 +84,12 @@ sub setCount {
 
 sub toString {
 	my( $self ) = @_;
-	return "priority: $self->{_priority}, id: $self->{_id}, subject: $self->{_subject}, updated_on: $self->{_updated_on}, count: $self->{_count}";
+	return "project: $self->{_project}, priority: $self->{_priority}, id: $self->{_id}, subject: $self->{_subject}, updated_on: $self->{_updated_on}, count: $self->{_count}";
 }
 
 sub toHTML {
     my( $self ) = @_;
     my $url_issues = "https://hub.tmaxsoft.com/redmine/issues";
-    return "<tr><td>$self->{_priority}</td><td><a href=\"$url_issues/$self->{_id}\">$self->{_id}</a></td><td class=\"reminder_subject\">$self->{_subject}</td><td>$self->{_updated_on}</td><td>$self->{_count}</td>";
+    return "<tr><td>$self->{_project}</td><td>$self->{_priority}</td><td><a href=\"$url_issues/$self->{_id}\">$self->{_id}</a></td><td class=\"reminder_subject\">$self->{_subject}</td><td>$self->{_updated_on}</td><td>$self->{_count}</td>";
 }
 1;

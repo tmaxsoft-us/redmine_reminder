@@ -39,8 +39,8 @@ my $header='';
 my $footer='';
 
 sub push_email {
-    my($priority, $id, $subject, $updated_on, $reminder_count) = @_;
-    my $record = new Record($priority, $id, $subject, $updated_on, $reminder_count);
+    my($project, $priority, $id, $subject, $updated_on, $reminder_count) = @_;
+    my $record = new Record($project, $priority, $id, $subject, $updated_on, $reminder_count);
     push(@records, $record);
 }
 
@@ -51,7 +51,7 @@ sub send_email {
         return();
     }
 
-    $body="<h3>$email</h3>\n<table>\n<thread><tr><th>Priority</th><th>ID</th><th>Subject</th><th>Updated on</th><th>Reminder Count</th></tr></thread><tbody>";
+    $body="<h3>$email</h3>\n<table>\n<thread><tr><th>Project</th><th>Priority</th><th>ID</th><th>Subject</th><th>Updated</th><th>Count</th></tr></thread><tbody>";
     for my $record (@records){
         my $record_html=$record->toHTML();
         $body.="$record_html\n";
@@ -142,6 +142,7 @@ sub load_config {
 sub main {
     my $previous_email='';
 
+    my $project ='';
     my $priority ='';
     my $id ='';
     my $subject ='';
@@ -182,15 +183,15 @@ sub main {
 
     $dbh->do($create_statement);
 
-    my $reminder_statement = qq{select 
-        enumerations.name as priority, issues.id as id, issues.subject as subject, email_addresses.address as email,
+    my $reminder_statement = qq{select
+        projects.name as project, enumerations.name as priority, issues.id as id, issues.subject as subject, email_addresses.address as email,
         issues.updated_on as updated_on
         from enumerations
         join issues on issues.priority_id = enumerations.id
         join email_addresses on email_addresses.user_id = issues.assigned_to_id
         join projects on projects.id = issues.project_id
         join issue_statuses on issue_statuses.id = issues.status_id
-        where 
+        where
         (issue_statuses.is_closed=0) and
         (issues.project_id=68 or projects.parent_id=68) and
         (issues.tracker_id=3) and
@@ -198,7 +199,7 @@ sub main {
             ((enumerations.id=3) and (issues.updated_on < NOW() - INTERVAL 4 DAY)) or
             ((enumerations.id=4) and (issues.updated_on < NOW() - INTERVAL 2 DAY))
         )
-        ORDER BY `email` ASC, `priority` DESC, `id` ASC
+        ORDER BY `email` ASC, `project` ASC, `priority` DESC, `id` ASC
     };
 
     my $rows = $dbh->selectall_arrayref($reminder_statement, { Slice => {} }) or die "Error: ".$dbh->errstr;
@@ -206,6 +207,7 @@ sub main {
     if($is_debug eq 1) { print "[DEUBG] rows_count: $rows_count\n"; }
 
     for my $row ( @$rows ){
+	$project = $row->{'project'};
         $priority = $row->{'priority'};
         $id = $row->{'id'};
         $subject = $row->{'subject'};
@@ -241,14 +243,14 @@ sub main {
         }
 
         if ($previous_email eq $email){
-            push_email($priority, $id, $subject, $updated_on, $reminder_count);
+            push_email($project, $priority, $id, $subject, $updated_on, $reminder_count);
         }
         elsif ($previous_email eq ''){
-            push_email($priority, $id, $subject, $updated_on, $reminder_count);
+            push_email($project, $priority, $id, $subject, $updated_on, $reminder_count);
         }
         else{
             send_email($previous_email);
-            push_email($priority, $id, $subject, $updated_on, $reminder_count);
+            push_email($project, $priority, $id, $subject, $updated_on, $reminder_count);
         }
         $previous_email = $email;
     }
